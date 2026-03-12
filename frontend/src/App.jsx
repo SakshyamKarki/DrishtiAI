@@ -4,8 +4,8 @@ function App() {
 
   return (
     <>
-      <h2>Dristi AI</h2>
-      <p>Start working</p>
+      <h2 className='bg-red-400'>Dristi AI</h2>
+      <p className='bg-green-500'>Start working</p>
     </>
   )
 }
