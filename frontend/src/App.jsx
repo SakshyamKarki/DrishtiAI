@@ -1,11 +1,17 @@
 import './App.css'
+import Navbar from "./components/Navbar"
+import Footer from "./components/Footer"
+import {Outlet} from 'react-router-dom'
 
 function App() {
 
   return (
     <>
-      <h2 className='bg-red-400'>Dristi AI</h2>
-      <p className='bg-green-500'>Start working</p>
+      <Navbar/>
+      <main>
+        <Outlet/>
+      </main>
+      <Footer/>
     </>
   )
 }
