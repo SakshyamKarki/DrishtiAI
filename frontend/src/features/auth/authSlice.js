@@ -89,6 +89,50 @@ const authSlice = createSlice({
             state.isAuthenticated=false;
             state.error=action.payload;
         });
+
+        builder
+        .addCase(registerThunk.pending, (state)=>{
+            state.isLoading=true;
+            state.error = null;
+        })
+        .addCase(registerThunk.fulfilled, (state, action)=>{
+            state.isLoading = false;
+            state.isAuthenticated = true;
+            state.user = action.payload.user;
+            TokenService.setTokens(
+                action.payload.access,
+                action.payload.refresh
+            );
+        })
+        .addCase(registerThunk.rejected, (state, action)=>{
+            state.isLoading=false;
+            state.error=action.payload;
+        });
+
+        builder
+        .addCase(logoutThunk.fulfilled, (state)=>{
+            state.user=null;
+            state.isAuthenticated=false;
+            state.error=null;
+            TokenService.removeTokens();
+        })
+        .addCase(logoutThunk.rejected, (state)=>{
+            state.user=null;
+            state.isAuthenticated=false;
+            TokenService.removeTokens();
+        });
+
+        builder
+        .addCase(restoreSessionThunk.fulfilled, (state, action)=>{
+            state.user=action.payload.user;
+            state.isAuthenticated=true;
+        })
+        .addCase(restoreSessionThunk.rejected, (state, action)=>{
+            state.user=null;
+            state.isAuthenticated=null;
+            TokenService.removeTokens();
+        })
+
     }
 });
 
