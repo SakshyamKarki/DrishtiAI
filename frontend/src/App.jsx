@@ -8,20 +8,20 @@ import EyeBackground from './components/EyeBackground'
 import EyeBackgroundTwo from './components/EyeBackgroundTwo'
 
 function App() {
-  const [result, setResult] = useState(null);
+  // const [result, setResult] = useState(null);
 
   return (
-    <div className='relative bg-[#00022d] text-white h-[1000px] '>
+    <div className='relative min-h-screen' style={{ background: "#060611" }}>
       {/* <EyeBackground/> */}
-      <EyeBackgroundTwo />
+      {/* <EyeBackgroundTwo /> */}
       <Navbar/>
       <main>
         <Outlet/>
-        <div>
+        {/* <div>
           <h1>DrishtiAI</h1>
           <Upload setResult={setResult} />
           <Result result={result} />
-        </div>
+        </div> */}
       </main>
       <Footer/>
     </div>

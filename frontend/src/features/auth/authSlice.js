@@ -1,13 +1,57 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { TokenService } from "../../api/axiosInstance";
+import { getMeApi, loginApi, logoutApi, registerApi } from "../../api/authApi";
 
-// export const loginThunk = createAsyncThunk()
+export const loginThunk = createAsyncThunk(
+    "auth/login",
+    async (credentials, {rejectWithValue})=>{
+        try{    
+            const response = await loginApi(credentials);
+            return response.data;
+        }catch(error){
+            return rejectWithValue(
+                error.response?.data?.message || "Login Failed"
+            );
+        }
+    }
+);
 
-// export const registerThunk = createAsyncThunk()
+export const registerThunk = createAsyncThunk(
+    "auth/register",
+    async (userData, {rejectWithValue})=>{
+        try{
+            const response = await registerApi(userData);
+            return response.data;
+        }catch(error){
+            return rejectWithValue(
+                error.response?.data?.message || "Registration Failed"
+            );
+        }
+    }
+);
 
-// export const logoutThunk = createAsyncThunk()
+export const logoutThunk = createAsyncThunk(
+    "auth/logout",
+    async (_, {rejectWithValue})=>{
+        try{
+            await logoutApi();
+        }catch(error){
+            //clear state
+        }
+    }
+);
 
-// export const restoreSessionThunk = createAsyncThunk()
+export const restoreSessionThunk = createAsyncThunk(
+    "auth/restoreSession",
+    async (_, {rejectWithValue})=>{
+        try{
+            const response = await getMeApi();
+            return response.data;
+        }catch(error){
+            return rejectWithValue("Session expired.");
+        }
+    }
+);
 
 
 const initialState = {
@@ -21,11 +65,37 @@ const authSlice = createSlice({
     name: "auth",
     initialState,
     reducers:{
-        loginStart: (state)=>{
-            state.isLoading= true;
+        clearError: (state)=>{
             state.error = null;
         },
-        loginSuccess: (state, action)=>{
+    },
+    extraReducers: (builder) => {
+        builder
+        .addCase(loginThunk.pending, (state)=>{
+            state.isLoading = true;
+            state.error = null;
+        })
+        .addCase(loginThunk.fulfilled, (state, action)=>{
+            state.isLoading=false;
+            state.isAuthenticated=true;
+            state.user=action.payload.user;
+            TokenService.setTokens(
+                action.payload.access,
+                action.payload.refresh
+            );
+        })
+        .addCase(loginThunk.rejected, (state, action)=>{
+            state.isLoading = false;
+            state.isAuthenticated=false;
+            state.error=action.payload;
+        });
+
+        builder
+        .addCase(registerThunk.pending, (state)=>{
+            state.isLoading=true;
+            state.error = null;
+        })
+        .addCase(registerThunk.fulfilled, (state, action)=>{
             state.isLoading = false;
             state.isAuthenticated = true;
             state.user = action.payload.user;
@@ -33,34 +103,40 @@ const authSlice = createSlice({
                 action.payload.access,
                 action.payload.refresh
             );
-        },
-        loginFailure: (state, action)=>{
-            state.isLoading = false;
-            state.isAuthenticated = false;
-            state.error = action.payload;
-            state.user = null;
-        },
-        logout: (state)=>{
-            state.user = null;
-            state.isAuthenticated = false;
-            state.isLoading = false;
-            state.error = null;
-            TokenService.removeTokens(); 
-        },
-        restoreSession: (state, action)=>{
-            state.user = action.payload.user;
-            state.isAuthenticated = true;
-        },
-        clearError: (state)=>{
-            state.error = null;
-        },
-    },
-    extraReducers: (builder) => {
+        })
+        .addCase(registerThunk.rejected, (state, action)=>{
+            state.isLoading=false;
+            state.error=action.payload;
+        });
+
+        builder
+        .addCase(logoutThunk.fulfilled, (state)=>{
+            state.user=null;
+            state.isAuthenticated=false;
+            state.error=null;
+            TokenService.removeTokens();
+        })
+        .addCase(logoutThunk.rejected, (state)=>{
+            state.user=null;
+            state.isAuthenticated=false;
+            TokenService.removeTokens();
+        });
+
+        builder
+        .addCase(restoreSessionThunk.fulfilled, (state, action)=>{
+            state.user=action.payload.user;
+            state.isAuthenticated=true;
+        })
+        .addCase(restoreSessionThunk.rejected, (state, action)=>{
+            state.user=null;
+            state.isAuthenticated=null;
+            TokenService.removeTokens();
+        })
 
     }
 });
 
-export const {clearError, loginStart} = authSlice.actions;
+export const {clearError} = authSlice.actions;
 
 export const selectUser = (state) => state.auth.user;
 export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;
