@@ -2,12 +2,11 @@ import { Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
 import RegisterPage from "../pages/RegisterPage";
 import LoginPage from "../pages/LoginPage";
-import Home from "../pages/Home";
-import Detect from "../pages/Detect";
-import About from "../pages/About";
 import HistoryPage from "../pages/HistoryPage";
 import App from "../App"
 import LandingPage from "../pages/LandingPage";
+import Dashboard from "../pages/Dashboard";
+import UploadPage from "../pages/UploadPage";
 
 const routes = [
   //public routes
@@ -17,18 +16,18 @@ const routes = [
   //protected routes
   {
     element: (
-      <ProtectedRoute>
+    //   <ProtectedRoute>
         <App />
-      </ProtectedRoute>
+    //   </ProtectedRoute>
     ),
     children: [
       {
-        path: "/",
-        element: <Home />,
+        path: "/dashboard",
+        element: <Dashboard />,
       },
       {
-        path: "/detection",
-        element: <Detect />,
+        path: "/upload",
+        element: <UploadPage />,
       },
       {
         path: "/history",

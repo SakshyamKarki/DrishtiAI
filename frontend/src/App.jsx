@@ -2,18 +2,19 @@ import './App.css'
 import Navbar from "./components/Navbar"
 import Footer from "./components/Footer"
 import {Outlet} from 'react-router-dom'
-import Upload from "./components/Upload";
-import Result from "./components/Result";
-import EyeBackground from './components/EyeBackground'
-import EyeBackgroundTwo from './components/EyeBackgroundTwo'
+import './styles/auth.css'
 
 function App() {
   // const [result, setResult] = useState(null);
 
   return (
-    <div className='relative min-h-screen' style={{ background: "#060611" }}>
+    <div className='relative min-h-screen pt-1' style={{ background: "#060611" }}>
       {/* <EyeBackground/> */}
       {/* <EyeBackgroundTwo /> */}
+      <div className="auth-orb-1" />
+      {/* <div className="auth-orb-2" /> */}
+      <div className="auth-grid" />
+
       <Navbar/>
       <main>
         <Outlet/>

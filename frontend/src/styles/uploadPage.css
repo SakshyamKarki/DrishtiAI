@@ -1,0 +1,174 @@
+@reference "tailwindcss";
+@reference "../index.css";
+
+
+/* ─── Upload Page ────────────────────────────────────────────────────────────*/
+.upload-page {
+  @apply px-6 py-7 max-w-4xl mx-auto;
+}
+
+.upload-grid {
+  @apply grid grid-cols-2 gap-4 items-start;
+}
+
+.upload-panel {
+  @apply rounded-2xl p-5 flex flex-col gap-4;
+  background: rgba(13,17,23,0.95);
+  border: 1px solid #21262d;
+  min-height: 420px;
+}
+
+/* ── Dropzone ── */
+.dropzone {
+  @apply rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer text-center transition-all p-8;
+  border: 1.5px dashed #21262d;
+}
+
+.dropzone:hover {
+  border-color: rgba(99,102,241,0.5);
+  background: rgba(99,102,241,0.03);
+}
+
+.dropzone.dragging {
+  border-color: rgba(99,102,241,0.7);
+  background: rgba(99,102,241,0.06);
+}
+
+.dropzone.has-file {
+  @apply p-4;
+  border-color: rgba(99,102,241,0.4);
+  background: rgba(99,102,241,0.03);
+}
+
+.drop-icon { @apply text-3xl; }
+.drop-title { @apply text-sm font-medium text-slate-200; }
+.drop-sub   { @apply text-xs; color: #484f58; }
+.drop-browse { @apply text-xs cursor-pointer; color: #818cf8; }
+.drop-browse:hover { @apply underline; }
+.drop-hint  { @apply text-xs; color: #484f58; }
+.drop-filename { @apply text-xs font-medium text-slate-300 truncate w-full text-center; }
+.drop-change   { @apply text-xs; color: #818cf8; }
+
+.upload-error {
+  @apply text-xs rounded-lg px-3 py-2;
+  color: #f85149;
+  background: rgba(248,81,73,0.08);
+  border: 0.5px solid rgba(248,81,73,0.2);
+}
+
+/* ── Mode badge ── */
+.mode-badge {
+  @apply inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium;
+  color: #818cf8;
+  background: rgba(99,102,241,0.1);
+  border: 1px solid rgba(99,102,241,0.2);
+}
+
+.mode-dot {
+  @apply rounded-full flex-shrink-0;
+  width: 6px; height: 6px;
+  background: #6366f1;
+  animation: modePulse 2s infinite;
+}
+
+@keyframes modePulse {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
+
+/* ── Analyze button ── */
+.analyze-btn {
+  @apply w-full py-3 rounded-xl text-sm font-semibold text-white transition-all border-none cursor-pointer;
+  font-family: 'Syne', sans-serif;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+}
+
+.analyze-btn:hover:not(:disabled) { @apply opacity-90 -translate-y-px; }
+.analyze-btn:disabled { @apply opacity-40 cursor-not-allowed; }
+
+/* ── Result panel ── */
+.result-preview {
+  @apply w-full rounded-xl overflow-hidden;
+  height: 150px;
+  border: 1px solid;
+}
+
+.verdict-row {
+  @apply flex items-center justify-between;
+}
+
+.verdict-value {
+  font-family: 'Syne', sans-serif;
+  @apply text-4xl font-bold leading-none;
+}
+
+.verdict-badge {
+  @apply px-3 py-1.5 rounded-lg text-xs font-semibold;
+}
+
+.conf-label-row {
+  @apply flex items-center justify-between mb-2;
+}
+
+.conf-value { @apply text-xs font-semibold; }
+
+.conf-bar-bg {
+  @apply w-full rounded-full overflow-hidden;
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+}
+
+.conf-bar-fill {
+  height: 100%;
+  @apply rounded-full transition-all duration-700;
+}
+
+.result-meta-grid {
+  @apply grid grid-cols-2 gap-3;
+}
+
+.result-meta-item {
+  @apply flex flex-col gap-1 rounded-xl px-3 py-3;
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid #21262d;
+}
+
+.result-meta-label {
+  @apply text-xs uppercase tracking-widest;
+  color: #484f58;
+}
+
+.result-meta-value {
+  @apply text-sm font-medium text-slate-300;
+}
+
+/* ── Empty result ── */
+.result-empty {
+  @apply flex-1 flex flex-col items-center justify-center gap-3 text-center;
+  justify-content: center;
+}
+
+.result-empty-icon {
+  @apply flex items-center justify-center rounded-full text-2xl opacity-30;
+  width: 52px; height: 52px;
+  border: 1px dashed #21262d;
+}
+
+.result-empty-text {
+  @apply text-xs max-w-xs;
+  color: #484f58;
+}
+
+/* ── Analyze again ── */
+.analyze-again-btn {
+  @apply w-full py-2.5 rounded-xl text-xs cursor-pointer transition-all;
+  background: transparent;
+  border: 0.5px solid #21262d;
+  color: #8b949e;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.analyze-again-btn:hover {
+  background: rgba(255,255,255,0.04);
+  color: #e6edf3;
+}
