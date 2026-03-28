@@ -1,0 +1,1 @@
+from detection.urls.detect import *
