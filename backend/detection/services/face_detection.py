@@ -1,6 +1,5 @@
 import cv2
 
-# Load OpenCV Haar Cascade
 face_cascade = cv2.CascadeClassifier(
     cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
 )
@@ -12,9 +11,8 @@ def detect_face(image_path):
     faces = face_cascade.detectMultiScale(gray, 1.3, 5)
 
     if len(faces) == 0:
-        return img  # fallback
+        return img  
 
-    # Take largest face
     x, y, w, h = sorted(faces, key=lambda f: f[2]*f[3], reverse=True)[0]
 
     face = img[y:y+h, x:x+w]
