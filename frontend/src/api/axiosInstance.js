@@ -30,7 +30,7 @@ export const TokenService = {
 
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 3000,
+  timeout: 30000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -40,7 +40,7 @@ let isRefreshing = false;
 let failedQueue = [];
 
 const processQueue = (error, token = null) => {
-  failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve(error)));
+  failedQueue.forEach((p) => (error ? p.reject(error) : p.resolve(token)));
   failedQueue = [];
 };
 
@@ -51,9 +51,18 @@ const redirectToLogin = () => {
 };
 
 api.interceptors.request.use(
-  (response) => {
-    return response;
+  (config) => {
+    const token = TokenService.getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
   },
+  (error) => Promise.reject(error)
+);
+
+api.interceptors.response.use(
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
@@ -63,22 +72,10 @@ api.interceptors.request.use(
     }
 
     const status = error.response?.status;
-    const message = error.response?.data?.message;
-
-    if (
-      !originalRequest?.skipAuth &&
-      status === 401 &&
-      typeof error.response?.data?.detail === "string" &&
-      error.response.data.detail.includes("token_invalid")
-    ) {
-      TokenService.removeTokens();
-      toast.error("Session expired. Please login again.");
-      redirectToLogin();
-      return Promise.reject(error);
-    }
+    const message = error.response?.data?.detail;
 
     if (status === 401 && !originalRequest._retry) {
-      if (originalRequest.url?.includes("/token/refresh/")) {
+      if (originalRequest.url?.includes("/auth/refresh/")) {
         TokenService.removeTokens();
         redirectToLogin();
         return Promise.reject(error);
@@ -109,7 +106,7 @@ api.interceptors.request.use(
         // call refresh endpoint directly with plain axios, not our instance
         // so it doesnt go through this interceptor again
         const { data } = await axios.post(
-          `${API_BASE_URL}/token/refresh/`,
+          `${API_BASE_URL}/auth/refresh/`,
           { refresh: refreshToken },
           { skipAuth: true },
         );
@@ -133,6 +130,20 @@ api.interceptors.request.use(
       }
     }
 
+
+    if (
+      !originalRequest?.skipAuth &&
+      status === 401 &&
+      typeof error.response?.data?.detail === "string" &&
+      error.response.data.detail.includes("token_invalid")
+    ) {
+      TokenService.removeTokens();
+      toast.error("Session expired. Please login again.");
+      redirectToLogin();
+      return Promise.reject(error);
+    }
+
+    
     // ── All other errors ──
     const nonFieldErrors = error.response?.data?.error?.non_field_errors;
     const shouldShowToast =

@@ -4,13 +4,18 @@ import { getMeApi, loginApi, logoutApi, registerApi } from "../../api/authApi";
 
 export const loginThunk = createAsyncThunk(
     "auth/login",
-    async (credentials, {rejectWithValue})=>{
+    async (credentials, {rejectWithValue, dispatch})=>{
         try{    
             const response = await loginApi(credentials);
-            return response.data;
+            TokenService.setTokens(response.data.access, response.data.refresh);
+            const meResponse = await getMeApi();
+            return {
+                ...response.data,
+                user: meResponse.data
+            };
         }catch(error){
             return rejectWithValue(
-                error.response?.data?.message || "Login Failed"
+                error.response?.data?.detail || "Login Failed"
             );
         }
     }
@@ -24,7 +29,7 @@ export const registerThunk = createAsyncThunk(
             return response.data;
         }catch(error){
             return rejectWithValue(
-                error.response?.data?.message || "Registration Failed"
+                error.response?.data?.detail || "Registration Failed"
             );
         }
     }
@@ -46,7 +51,7 @@ export const restoreSessionThunk = createAsyncThunk(
     async (_, {rejectWithValue})=>{
         try{
             const response = await getMeApi();
-            return response.data;
+            return {user:response.data};
         }catch(error){
             return rejectWithValue("Session expired.");
         }
@@ -79,10 +84,6 @@ const authSlice = createSlice({
             state.isLoading=false;
             state.isAuthenticated=true;
             state.user=action.payload.user;
-            TokenService.setTokens(
-                action.payload.access,
-                action.payload.refresh
-            );
         })
         .addCase(loginThunk.rejected, (state, action)=>{
             state.isLoading = false;
@@ -95,14 +96,8 @@ const authSlice = createSlice({
             state.isLoading=true;
             state.error = null;
         })
-        .addCase(registerThunk.fulfilled, (state, action)=>{
+        .addCase(registerThunk.fulfilled, (state)=>{
             state.isLoading = false;
-            state.isAuthenticated = true;
-            state.user = action.payload.user;
-            TokenService.setTokens(
-                action.payload.access,
-                action.payload.refresh
-            );
         })
         .addCase(registerThunk.rejected, (state, action)=>{
             state.isLoading=false;
@@ -110,26 +105,36 @@ const authSlice = createSlice({
         });
 
         builder
+        .addCase(logoutThunk.pending, (state) => {
+            state.isLoading = true;
+        })
         .addCase(logoutThunk.fulfilled, (state)=>{
+            state.isLoading = false;
             state.user=null;
             state.isAuthenticated=false;
             state.error=null;
             TokenService.removeTokens();
         })
         .addCase(logoutThunk.rejected, (state)=>{
+            state.isLoading=false;
             state.user=null;
             state.isAuthenticated=false;
             TokenService.removeTokens();
         });
 
         builder
+        .addCase(restoreSessionThunk.pending, (state) => {
+            state.isLoading = true;
+        })
         .addCase(restoreSessionThunk.fulfilled, (state, action)=>{
+            state.isLoading=false;
             state.user=action.payload.user;
             state.isAuthenticated=true;
         })
         .addCase(restoreSessionThunk.rejected, (state, action)=>{
+            state.isLoading=false;
             state.user=null;
-            state.isAuthenticated=null;
+            state.isAuthenticated=false;
             TokenService.removeTokens();
         })
 

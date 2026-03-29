@@ -63,7 +63,7 @@ const Navbar = () => {
         <div className="navbar-avatar">
           {getInitials(user?.name)}
         </div>
-        <span className="navbar-username">{user?.name ?? "User"}</span>
+        <span className="navbar-username">{user?.username ?? "User"}</span>
         <span className={`navbar-chevron ${profileOpen ? "open" : ""}`}>▼</span>
 
         {/* dropdown */}
@@ -71,7 +71,7 @@ const Navbar = () => {
           <div className="navbar-dropdown">
 
             <div className="navbar-dropdown-header">
-              <div className="navbar-dropdown-name">{user?.name}</div>
+              <div className="navbar-dropdown-name">{user?.username}</div>
               <div className="navbar-dropdown-email">{user?.email}</div>
             </div>
 

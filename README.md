@@ -51,4 +51,4 @@ AI system to detect:
 
 > npm install
 
-> npm start
+> npm run dev
