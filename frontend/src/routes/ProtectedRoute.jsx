@@ -1,16 +1,17 @@
 import { useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
-import { selectIsAuthenticated } from "../features/auth/authSlice";
+import {
+  selectAuthLoading,
+  selectIsAuthenticated,
+} from "../features/auth/authSlice";
 
-const ProtectedRoute = ({children}) =>{
-    const isAuthenticated = useSelector(selectIsAuthenticated);
+const ProtectedRoute = ({ children }) => {
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const isLoading = useSelector(selectAuthLoading);
 
-    if(!isAuthenticated){
-        return <Navigate to="/login" replace/>
-    }
+  if (isLoading) return null;
 
-    return children;
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
 export default ProtectedRoute;
-

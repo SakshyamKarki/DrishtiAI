@@ -1,30 +1,14 @@
 import { useCallback, useState } from "react";
 import "../styles/uploadPage.css";
 import { useDropzone } from "react-dropzone";
+import { uploadDetectionImage } from "../api/uploadApi";
 
-const simulateAnalysis = () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id: 1,
-        verdict: "FAKE",
-        confidence: 94.2,
-        mode: "ai_generated",
-        model_used: "ResNet18",
-        face_detected: true,
-        processing_time: 1.3,
-        analyzed_at: "2026-03-22T10:30:00Z",
-      });
-    }, 2000);
-  });
-};
-
-const ResultPanel = ({ result, previewUrl, onReset }) => {
-  const isFake = result.verdict === "FAKE";
+const ResultPanel = ({ result, onReset }) => {
+  const isFake = result.is_fake === "FAKE";
 
   return (
     <div className="upload-panel">
-      <span className="panel-label">Detection Result</span>
+      <span className="panel-label text-white">Detection Result</span>
       <div
         className="result-preview"
         style={{
@@ -33,7 +17,7 @@ const ResultPanel = ({ result, previewUrl, onReset }) => {
         }}
       >
         <img
-          src={previewUrl}
+          src={result.heatmap}
           alt="analyzed"
           className="w-full h-full object-cover rounded-xl"
         />
@@ -45,7 +29,7 @@ const ResultPanel = ({ result, previewUrl, onReset }) => {
             className="verdict-value"
             style={{ color: isFake ? "#f85149" : "#56d364" }}
           >
-            {result.verdict}
+            {result.is_fake}
           </div>
         </div>
         <div
@@ -69,7 +53,7 @@ const ResultPanel = ({ result, previewUrl, onReset }) => {
             className="conf-value"
             style={{ color: isFake ? "#f85149" : "#56d364" }}
           >
-            {result.confidence}%
+            {result.confidence}
           </span>
         </div>
         <div className="conf-bar-bg">
@@ -91,7 +75,7 @@ const ResultPanel = ({ result, previewUrl, onReset }) => {
         </div>
         <div className="result-meta-item">
           <span className="result-meta-label">Model used</span>
-          <span className="result-meta-value">{result.model_used}</span>
+          <span className="result-meta-value">{result.model}</span>
         </div>
       </div>
       <button className="analyze-again-btn" onClick={onReset}>
@@ -103,7 +87,7 @@ const ResultPanel = ({ result, previewUrl, onReset }) => {
 
 const EmptyResult = () => (
   <div className="upload-panel">
-    <span className="panel-label">Detection result</span>
+    <span className="panel-label text-white">Detection result</span>
     <div className="result-empty">
       <div className="result-empty-icon">👁</div>
       <p className="result-empty-text">
@@ -116,9 +100,9 @@ const EmptyResult = () => (
 const UploadPage = () => {
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [result, setResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [result, setResult] = useState(null);
 
   const onDrop = useCallback((acceptedFiles, rejectedFiles) => {
     if (rejectedFiles.length > 0) {
@@ -144,11 +128,12 @@ const UploadPage = () => {
     setIsLoading(true);
     setError(null);
     try {
-      //hit api
-      const data = await simulateAnalysis();
-      setResult(data);
+      const res = await uploadDetectionImage(file);
+      setResult(res.data);
     } catch (err) {
+      // console.log("error detail: ", err);
       setError("Analysis failed. Try again");
+      // setError(err)
     } finally {
       setIsLoading(false);
     }
@@ -174,7 +159,7 @@ const UploadPage = () => {
 
       <div className="upload-grid">
         <div className="upload-panel">
-          <span className="span-label">Upload Image</span>
+          <span className="span-label text-white">Upload Image</span>
           <div
             {...getRootProps()}
             className={`dropzone ${isDragActive ? "dragging" : ""} ${file ? "has-file" : ""}`}
@@ -186,7 +171,7 @@ const UploadPage = () => {
                 <img
                   src={previewUrl}
                   alt="preview"
-                  className="w-full h-36 object-cover rounded-xl"
+                  className="w-full h-60 object-cover rounded-xl"
                 />
                 <p className="drop-filename">{file.name}</p>
                 <p className="drop-change">Click or drop to change</p>
@@ -203,7 +188,6 @@ const UploadPage = () => {
               </>
             )}
           </div>
-          {/* {error && <p className="upload-error">{error}</p>} */}
           {error && <p className="upload-error">{error}</p>}
           <div>
             <p className="panel-label mb-2">Detection mode</p>

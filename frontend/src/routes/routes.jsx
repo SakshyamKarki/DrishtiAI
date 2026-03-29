@@ -7,37 +7,66 @@ import App from "../App"
 import LandingPage from "../pages/LandingPage";
 import Dashboard from "../pages/Dashboard";
 import UploadPage from "../pages/UploadPage";
+import RootLayout from "../components/layouts/RootLayout";
+
+// const routes = [
+//   //public routes
+//   { path: "/login", element: <LoginPage /> },
+//   { path: "/register", element: <RegisterPage /> },
+//   { path: "/", element: <LandingPage /> },
+//   //protected routes
+//   {
+//     element: (
+//       <ProtectedRoute>
+//         <App />
+//       </ProtectedRoute>
+//     ),
+//     children: [
+//       {
+//         path: "/dashboard",
+//         element: <Dashboard />,
+//       },
+//       {
+//         path: "/upload",
+//         element: <UploadPage />,
+//       },
+//       {
+//         path: "/history",
+//         element: <HistoryPage />,
+//       },
+//     ],
+//   },
+
+//   //defaults
+//   { path: "*", element: <Navigate to="/" replace /> },
+// ];
 
 const routes = [
-  //public routes
-  { path: "/login", element: <LoginPage /> },
-  { path: "/register", element: <RegisterPage /> },
-  { path: "/", element: <LandingPage /> },
-  //protected routes
   {
-    element: (
-    //   <ProtectedRoute>
-        <App />
-    //   </ProtectedRoute>
-    ),
+    path:"/",
+    element : <RootLayout/>,
     children: [
-      {
-        path: "/dashboard",
-        element: <Dashboard />,
-      },
-      {
-        path: "/upload",
-        element: <UploadPage />,
-      },
-      {
-        path: "/history",
-        element: <HistoryPage />,
-      },
-    ],
-  },
+      //public routes
+      {index: true, element:<LandingPage/>},
+      {path:'login', element:<LoginPage/>},
+      {path:'register', element:<RegisterPage/>},
 
-  //defaults
-  { path: "*", element: <Navigate to="/" replace /> },
-];
+      //protected routes
+      {
+        element: <ProtectedRoute>
+          <App/>
+        </ProtectedRoute>,
+        children:[
+          {path:'dashboard', element:<Dashboard/>},
+          {path:'upload', element:<UploadPage/>},
+          {path:'history', element:<HistoryPage/>},
+        ],
+      },
+
+      // fallback
+      {path:"*", element:<Navigate to="/" replace/>},
+    ]
+  }
+]
 
 export default routes;

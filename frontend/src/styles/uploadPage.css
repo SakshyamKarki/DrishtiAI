@@ -89,7 +89,7 @@
 /* ── Result panel ── */
 .result-preview {
   @apply w-full rounded-xl overflow-hidden;
-  height: 150px;
+  height:280px;
   border: 1px solid;
 }
 

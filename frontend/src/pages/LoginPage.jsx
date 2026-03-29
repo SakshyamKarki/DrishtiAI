@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import {
   loginThunk,
+  selectAuthError,
   selectAuthLoading,
   selectIsAuthenticated,
 } from "../features/auth/authSlice";
@@ -9,13 +10,14 @@ import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import loginSchema from "../validations/loginSchema";
 import { useEffect } from "react";
-import '../styles/auth.css'
+import "../styles/auth.css";
 
 function LoginPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isLoading = useSelector(selectAuthLoading);
   const isAuthenticated = useSelector(selectIsAuthenticated);
+  const error = useSelector(selectAuthError);
 
   const {
     register,
@@ -25,27 +27,32 @@ function LoginPage() {
     resolver: yupResolver(loginSchema),
   });
 
-  useEffect(()=>{
-    if (isAuthenticated) navigate("/");
-  },[isAuthenticated]);
+  useEffect(() => {
+    if (isAuthenticated) navigate("/dashboard");
+  }, [isAuthenticated]);
 
-  const onSubmit = async (data) =>{
+  const onSubmit = async (data) => {
+    // console.log("submit button clicked.");
     const result = await dispatch(loginThunk(data));
-    if(loginThunk.fulfilled.match(result)){
-      navigate("/");
-    }
-  }
+    // if (loginThunk.fulfilled.match(result)) {
+    //   navigate("/");
+    // }
+  };
+
+  useEffect(() => {
+    console.log("isLoading:", isLoading);
+  }, [isLoading]);
   return (
     <div className="auth-page">
-      <div className="auth-orb-1"/>
-      <div className="auth-orb-2"/>
+      <div className="auth-orb-1" />
+      <div className="auth-orb-2" />
 
-      <div className="auth-grid"/>
+      <div className="auth-grid" />
 
       <div className="auth-card">
         <div className="auth-logo-row">
           <div className="auth-logo-ring">
-            <div className="auth-logo-dot"/>
+            <div className="auth-logo-dot" />
           </div>
           <span className="auth-logo-name">
             Drishti<span className="text-indigo-400">AI</span>
@@ -64,8 +71,40 @@ function LoginPage() {
         <p className="text-sm text-slate-500 mb-8">
           Sign in to your account to continue
         </p>
-        <form onSubmit={handleSubmit(onSubmit)} noValidate>
+        <form
+          onSubmit={handleSubmit(onSubmit, (errors) =>
+            console.log("Validation errors:", errors),
+          )}
+          noValidate
+        >
           <div className="mb-5">
+            <label
+              htmlFor="username"
+              className="block text-xs text-slate-400 mb-2 font-medium tracking-wide"
+            >
+              Username
+            </label>
+            <input
+              type="text"
+              placeholder="Username"
+              {...register("username")}
+              className="w-full rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 outline-none transition-all"
+              style={{
+                background: errors.username
+                  ? "rgba(248,113,113,0.05)"
+                  : "rgba(255,255,255,0.05)",
+                border: errors.username
+                  ? "0.5px solid rgba(248,113,113,0.5)"
+                  : "0.5px solid rgba(255,255,255,0.1)",
+              }}
+            />
+            {errors.username && (
+              <p className="text-xs text-red-400 mt-1.5">
+                {errors.username.message}
+              </p>
+            )}
+          </div>
+          {/* <div className="mb-5">
             <label
               htmlFor="email"
               className="block text-xs text-slate-400 mb-2 font-medium tracking-wide"
@@ -91,7 +130,7 @@ function LoginPage() {
                 {errors.email.message}
               </p>
             )}
-          </div>
+          </div> */}
           <div className="mb-2">
             <label className="block text-xs font-medium text-slate-400 mb-2 tracking-wide">
               Password
@@ -119,13 +158,18 @@ function LoginPage() {
           <div className="text-right mb-6">
             {/* <span className="text-xs text-indigo-400 cursor-pointer hover:underline">
               Forgot password?
-            </span> */}
+              </span> */}
+          </div>
+          <div className="text-right mb-6">
+            {error && (
+              <p className="text-xs text-red-400 text-center mt-3">{error}</p>
+            )}
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 rounded-xl text-sm font-semibold text-white transition-all disabled:opacity-60"
+            className="w-full py-3 rounded-xl text-sm font-semibold cursor-pointer hover:opacity-80 text-white transition-all disabled:opacity-60"
             style={{
               background: "linear-gradient(135deg, #6366f1, #818cf8)",
               fontFamily: "Syne, sans-serif",

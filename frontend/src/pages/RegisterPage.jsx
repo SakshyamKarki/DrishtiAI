@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import { registerThunk, selectAuthLoading } from "../features/auth/authSlice";
+import { registerThunk, selectAuthLoading, selectIsAuthenticated } from "../features/auth/authSlice";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import registerSchema from "../validations/registerSchema";
@@ -12,7 +12,7 @@ function RegisterPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const isLoading = useSelector(selectAuthLoading);
-  const isAuthenticated = useSelector(selectAuthLoading);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
 
   const {
     register,
@@ -30,7 +30,7 @@ function RegisterPage() {
     const { confirmPassword, ...registerData } = data;
     const result = await dispatch(registerThunk(registerData));
     if (registerThunk.fulfilled.match(result)) {
-      navigate("/");
+      navigate("/login");
     }
   };
 
