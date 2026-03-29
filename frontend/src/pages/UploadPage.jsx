@@ -4,7 +4,7 @@ import { useDropzone } from "react-dropzone";
 import { uploadDetectionImage } from "../api/uploadApi";
 
 const ResultPanel = ({ result, onReset }) => {
-  const isFake = result.is_fake === "FAKE";
+  const isFake = result.is_fake;
 
   return (
     <div className="upload-panel">
@@ -60,7 +60,7 @@ const ResultPanel = ({ result, onReset }) => {
           <div
             className="conf-bar-fill"
             style={{
-              width: `${result.confidence}%`,
+              width: `${result.confidence}`,
               background: isFake
                 ? "linear-gradient(90deg, #f85149, #ff7875)"
                 : "linear-gradient(90deg, #56d364, #85ef8a)",
