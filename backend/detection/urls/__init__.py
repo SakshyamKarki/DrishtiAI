@@ -1,1 +1,1 @@
-from detection.urls.detect import *
+from detection.urls.detect_v3 import *

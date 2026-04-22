@@ -1,0 +1,1 @@
+from detection.views.detect_v3 import *
