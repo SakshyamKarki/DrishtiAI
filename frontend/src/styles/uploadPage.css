@@ -1,135 +1,234 @@
 @reference "tailwindcss";
 @reference "../index.css";
 
-
-/* ─── Upload Page ────────────────────────────────────────────────────────────*/
+/* ─── Upload Page ─────────────────────────────────────────────────────────── */
 .upload-page {
-  @apply px-6 py-7 max-w-4xl mx-auto;
+  @apply px-6 py-7 max-w-5xl mx-auto;
 }
 
 .upload-grid {
-  @apply grid grid-cols-2 gap-4 items-start;
+  @apply grid grid-cols-2 gap-5 items-start;
 }
 
 .upload-panel {
   @apply rounded-2xl p-5 flex flex-col gap-4;
-  background: rgba(13,17,23,0.95);
+  background: rgba(13, 17, 23, 0.95);
   border: 1px solid #21262d;
-  min-height: 420px;
+  min-height: 460px;
 }
 
-/* ── Dropzone ── */
+/* ─── Mode Info Bar ───────────────────────────────────────────────────────── */
+.mode-info-bar {
+  @apply flex flex-wrap gap-3 mb-5;
+}
+
+.mode-info-item {
+  @apply flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full;
+  color: #8b949e;
+  background: rgba(255, 255, 255, 0.04);
+  border: 0.5px solid #21262d;
+}
+
+.mode-info-dot {
+  @apply rounded-full flex-shrink-0;
+  width: 6px;
+  height: 6px;
+}
+
+/* ─── Dropzone ────────────────────────────────────────────────────────────── */
 .dropzone {
   @apply rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer text-center transition-all p-8;
   border: 1.5px dashed #21262d;
+  min-height: 220px;
 }
 
 .dropzone:hover {
-  border-color: rgba(99,102,241,0.5);
-  background: rgba(99,102,241,0.03);
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(99, 102, 241, 0.03);
 }
 
 .dropzone.dragging {
-  border-color: rgba(99,102,241,0.7);
-  background: rgba(99,102,241,0.06);
+  border-color: rgba(99, 102, 241, 0.7);
+  background: rgba(99, 102, 241, 0.06);
 }
 
 .dropzone.has-file {
   @apply p-4;
-  border-color: rgba(99,102,241,0.4);
-  background: rgba(99,102,241,0.03);
+  border-color: rgba(99, 102, 241, 0.4);
+  background: rgba(99, 102, 241, 0.03);
 }
 
-.drop-icon { @apply text-3xl; }
-.drop-title { @apply text-sm font-medium text-slate-200; }
-.drop-sub   { @apply text-xs; color: #484f58; }
-.drop-browse { @apply text-xs cursor-pointer; color: #818cf8; }
+.drop-icon      { @apply text-3xl; }
+.drop-title     { @apply text-sm font-medium text-slate-200; }
+.drop-sub       { @apply text-xs; color: #484f58; }
+.drop-browse    { @apply text-xs cursor-pointer; color: #818cf8; }
 .drop-browse:hover { @apply underline; }
-.drop-hint  { @apply text-xs; color: #484f58; }
-.drop-filename { @apply text-xs font-medium text-slate-300 truncate w-full text-center; }
-.drop-change   { @apply text-xs; color: #818cf8; }
+.drop-hint      { @apply text-xs; color: #484f58; }
+.drop-filename  { @apply text-xs font-medium text-slate-300 truncate w-full text-center; }
+.drop-change    { @apply text-xs; color: #818cf8; }
 
+/* ─── Upload Tips ─────────────────────────────────────────────────────────── */
+.upload-tips {
+  @apply rounded-xl p-3;
+  background: rgba(99, 102, 241, 0.05);
+  border: 0.5px solid rgba(99, 102, 241, 0.15);
+}
+
+.tips-title {
+  @apply text-xs font-medium mb-2;
+  color: #818cf8;
+}
+
+.tips-list {
+  @apply text-xs space-y-0.5 pl-3;
+  color: #484f58;
+  list-style: disc;
+}
+
+/* ─── Error ───────────────────────────────────────────────────────────────── */
 .upload-error {
   @apply text-xs rounded-lg px-3 py-2;
   color: #f85149;
-  background: rgba(248,81,73,0.08);
-  border: 0.5px solid rgba(248,81,73,0.2);
+  background: rgba(248, 81, 73, 0.08);
+  border: 0.5px solid rgba(248, 81, 73, 0.2);
 }
 
-/* ── Mode badge ── */
-.mode-badge {
-  @apply inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium;
-  color: #818cf8;
-  background: rgba(99,102,241,0.1);
-  border: 1px solid rgba(99,102,241,0.2);
-}
-
-.mode-dot {
-  @apply rounded-full flex-shrink-0;
-  width: 6px; height: 6px;
-  background: #6366f1;
-  animation: modePulse 2s infinite;
-}
-
-@keyframes modePulse {
-  0%,100% { opacity: 1; }
-  50%      { opacity: 0.3; }
-}
-
-/* ── Analyze button ── */
+/* ─── Analyze Button ──────────────────────────────────────────────────────── */
 .analyze-btn {
   @apply w-full py-3 rounded-xl text-sm font-semibold text-white transition-all border-none cursor-pointer;
-  font-family: 'Syne', sans-serif;
+  font-family: "Syne", sans-serif;
   background: linear-gradient(135deg, #6366f1, #818cf8);
 }
 
-.analyze-btn:hover:not(:disabled) { @apply opacity-90 -translate-y-px; }
-.analyze-btn:disabled { @apply opacity-40 cursor-not-allowed; }
-
-/* ── Result panel ── */
-.result-preview {
-  @apply w-full rounded-xl overflow-hidden;
-  height:280px;
-  border: 1px solid;
+.analyze-btn:hover:not(:disabled) {
+  @apply opacity-90 -translate-y-px;
 }
 
-.verdict-row {
-  @apply flex items-center justify-between;
+.analyze-btn:disabled {
+  @apply opacity-40 cursor-not-allowed;
 }
 
-.verdict-value {
-  font-family: 'Syne', sans-serif;
-  @apply text-4xl font-bold leading-none;
+.loading-row {
+  @apply flex items-center justify-center gap-2;
 }
 
-.verdict-badge {
-  @apply px-3 py-1.5 rounded-lg text-xs font-semibold;
+.loading-spinner {
+  @apply rounded-full inline-block flex-shrink-0;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  animation: spin 0.7s linear infinite;
 }
 
-.conf-label-row {
-  @apply flex items-center justify-between mb-2;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.conf-value { @apply text-xs font-semibold; }
-
-.conf-bar-bg {
-  @apply w-full rounded-full overflow-hidden;
-  height: 6px;
-  background: rgba(255,255,255,0.06);
+/* ─── Heatmap ─────────────────────────────────────────────────────────────── */
+.heatmap-wrap {
+  @apply relative rounded-xl overflow-hidden;
+  height: 200px;
 }
 
-.conf-bar-fill {
-  height: 100%;
-  @apply rounded-full transition-all duration-700;
+.heatmap-img {
+  @apply w-full h-full object-cover;
 }
 
+.heatmap-badge {
+  @apply absolute bottom-2 left-2 text-xs px-2 py-1 rounded-lg;
+  background: rgba(0, 0, 0, 0.7);
+  color: #8b949e;
+  backdrop-filter: blur(4px);
+}
+
+/* ─── Verdict ─────────────────────────────────────────────────────────────── */
+.verdict-conf-row {
+  @apply flex items-center justify-between gap-3;
+}
+
+.verdict-badge-large {
+  @apply flex items-center gap-3 rounded-2xl px-4 py-3 flex-1;
+}
+
+.verdict-icon {
+  @apply text-2xl font-bold leading-none;
+}
+
+.verdict-label {
+  font-family: "Syne", sans-serif;
+  @apply text-lg font-bold leading-none;
+}
+
+.verdict-sublabel {
+  @apply text-xs mt-0.5;
+  opacity: 0.7;
+}
+
+/* ─── Donut ───────────────────────────────────────────────────────────────── */
+.donut-wrapper {
+  @apply relative flex-shrink-0;
+  width: 100px;
+  height: 100px;
+}
+
+.donut-center {
+  @apply absolute inset-0 flex flex-col items-center justify-center;
+}
+
+.donut-pct {
+  font-family: "Syne", sans-serif;
+  @apply text-xl font-bold leading-none;
+}
+
+.donut-label {
+  @apply text-xs mt-0.5;
+  color: #484f58;
+}
+
+/* ─── Decision Score Bar ──────────────────────────────────────────────────── */
+.decision-score-row {
+  @apply flex flex-col gap-2;
+}
+
+.dsc-label {
+  @apply text-xs uppercase tracking-widest;
+  color: #484f58;
+}
+
+.dsc-bar-wrap {
+  @apply flex flex-col gap-1;
+}
+
+.dsc-bar-track {
+  @apply relative w-full rounded-full overflow-visible;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.dsc-bar-fill {
+  @apply absolute left-0 top-0 h-full rounded-full transition-all duration-700;
+}
+
+.dsc-threshold {
+  @apply absolute top-0 h-full;
+  width: 1.5px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dsc-labels {
+  @apply flex justify-between text-xs;
+  color: #484f58;
+}
+
+/* ─── Meta Grid ───────────────────────────────────────────────────────────── */
 .result-meta-grid {
-  @apply grid grid-cols-2 gap-3;
+  @apply grid grid-cols-2 gap-2;
 }
 
 .result-meta-item {
-  @apply flex flex-col gap-1 rounded-xl px-3 py-3;
-  background: rgba(255,255,255,0.03);
+  @apply flex flex-col gap-1 rounded-xl px-3 py-2;
+  background: rgba(255, 255, 255, 0.03);
   border: 0.5px solid #21262d;
 }
 
@@ -142,33 +241,124 @@
   @apply text-sm font-medium text-slate-300;
 }
 
-/* ── Empty result ── */
+/* ─── Face Meta ───────────────────────────────────────────────────────────── */
+.face-meta {
+  @apply flex flex-wrap gap-2;
+}
+
+.face-meta-item {
+  @apply text-xs px-2 py-1 rounded-lg;
+  color: #8b949e;
+  background: rgba(255, 255, 255, 0.03);
+  border: 0.5px solid #21262d;
+}
+
+/* ─── Analysis Section ────────────────────────────────────────────────────── */
+.analysis-section {
+  @apply flex flex-col gap-3;
+}
+
+.analysis-toggle {
+  @apply flex items-center justify-between w-full px-3 py-2 rounded-xl text-xs cursor-pointer transition-all border-none text-left;
+  background: rgba(255, 255, 255, 0.03);
+  border: 0.5px solid #21262d;
+  color: #8b949e;
+  font-family: "DM Sans", sans-serif;
+}
+
+.analysis-toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e6edf3;
+}
+
+.analysis-grid {
+  @apply flex flex-col gap-2;
+}
+
+/* DL pill */
+.dl-pill {
+  @apply flex items-center justify-between px-3 py-2 rounded-xl;
+  background: rgba(99, 102, 241, 0.08);
+  border: 0.5px solid rgba(99, 102, 241, 0.2);
+}
+
+.dl-pill-label {
+  @apply text-xs;
+  color: #818cf8;
+}
+
+.dl-pill-value {
+  @apply text-xs font-semibold;
+}
+
+/* ─── Score Bars ──────────────────────────────────────────────────────────── */
+.score-bar-row {
+  @apply flex flex-col gap-1;
+}
+
+.score-bar-header {
+  @apply flex items-center justify-between;
+}
+
+.score-bar-label {
+  @apply text-xs;
+  color: #8b949e;
+}
+
+.score-bar-value {
+  @apply text-xs font-semibold;
+}
+
+.score-bar-track {
+  @apply w-full rounded-full overflow-hidden;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.score-bar-fill {
+  @apply h-full rounded-full transition-all duration-500;
+}
+
+.score-bar-desc {
+  @apply text-xs;
+  color: #484f58;
+  font-size: 0.65rem;
+}
+
+/* ─── Empty Result ────────────────────────────────────────────────────────── */
 .result-empty {
   @apply flex-1 flex flex-col items-center justify-center gap-3 text-center;
-  justify-content: center;
 }
 
 .result-empty-icon {
-  @apply flex items-center justify-center rounded-full text-2xl opacity-30;
-  width: 52px; height: 52px;
+  @apply flex items-center justify-center rounded-full text-2xl opacity-20;
+  width: 56px;
+  height: 56px;
   border: 1px dashed #21262d;
 }
 
 .result-empty-text {
-  @apply text-xs max-w-xs;
+  @apply text-xs max-w-xs leading-relaxed;
   color: #484f58;
 }
 
-/* ── Analyze again ── */
+/* ─── Analyze Again ───────────────────────────────────────────────────────── */
 .analyze-again-btn {
   @apply w-full py-2.5 rounded-xl text-xs cursor-pointer transition-all;
   background: transparent;
   border: 0.5px solid #21262d;
   color: #8b949e;
-  font-family: 'DM Sans', sans-serif;
+  font-family: "DM Sans", sans-serif;
+  margin-top: auto;
 }
 
 .analyze-again-btn:hover {
-  background: rgba(255,255,255,0.04);
+  background: rgba(255, 255, 255, 0.04);
   color: #e6edf3;
+}
+
+.panel-label {
+  font-family: "Syne", sans-serif;
+  @apply text-xs font-semibold uppercase tracking-widest;
+  color: #8b949e;
 }

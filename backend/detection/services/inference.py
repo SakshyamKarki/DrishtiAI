@@ -1,79 +1,181 @@
 """
-Updated Inference Pipeline — DrishtiAI
-=======================================
-Integrates the three classical algorithms alongside the ResNet18 DL model.
+DrishtiAI — Improved Inference Pipeline v2
+============================================
+Full end-to-end pipeline for fake profile photo detection:
 
-Full pipeline for one image:
-  preprocess  →  ResNet18 forward pass
-              →  K-Means variance
-              →  Sobel edge score
-              →  Shannon entropy
-              →  Grad-CAM heatmap
-              →  Hybrid decision engine
-              →  API response dict
+  1. Load image + run improved face detection
+  2. Preprocess (crop, resize, normalise for DL)
+  3. ResNet18 forward pass (GPU if available)
+  4. Classical algorithms (all from scratch):
+       a. K-Means clustering variance
+       b. Sobel edge detection
+       c. Shannon entropy
+       d. DCT frequency analysis  ← NEW
+       e. LBP texture analysis    ← NEW
+       f. Color statistics        ← NEW
+  5. Grad-CAM heatmap
+  6. Hybrid decision engine v2 (7 signals)
+  7. Return structured result dict
+
+Performance notes:
+  - LBP uses downscaled image (96×96) for speed
+  - Frequency analysis uses 128×128 crop
+  - K-Means uses 3000 pixel sample
+  - All operations are CPU-friendly, GPU only for DL
 """
 
 import os
+import time
 import torch
 import cv2
 import numpy as np
 from django.conf import settings
 
-from .model_loader import load_model
-from .preprocess   import preprocess
-from .gradcam      import generate_cam
+# ── Service imports ─────────────────────────────────────────────────────────────
+from .model_loader          import load_model
+from .preprocess            import preprocess_from_bgr, preprocess
+from .gradcam               import generate_cam
+from .face_detection        import detect_and_crop_face, get_face_landmarks_simple
 
-# ── classical algorithm imports (implemented from scratch) ─────────────────────
-from .kmeans   import kmeans_variance
-from .edge     import sobel_edge_score
-from .entropy  import image_entropy_score
-from .decision import compute_decision
+# Classical algorithms (from scratch)
+from .kmeans                import kmeans_variance
+from .edge                  import sobel_edge_score
+from .entropy               import image_entropy_score
+
+# New algorithms (from scratch)
+from .frequency_analysis    import frequency_analysis_score
+from .lbp                   import lbp_texture_score
+from .color_stats           import color_stats_score
+
+from .decision              import compute_decision_v2
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def run_inference(image_path: str, instance_id: int) -> dict:
+# ── Helper: safe face crop to RGB numpy ─────────────────────────────────────────
+
+def _face_to_rgb(face_bgr: np.ndarray) -> np.ndarray:
+    """Convert BGR crop to RGB for classical algorithms."""
+    return cv2.cvtColor(face_bgr, cv2.COLOR_BGR2RGB)
+
+
+def _resize_for_analysis(image_rgb: np.ndarray,
+                          size: int = 224) -> np.ndarray:
+    """Resize to square for consistent algorithm input."""
+    return cv2.resize(image_rgb, (size, size), interpolation=cv2.INTER_AREA)
+
+
+# ── Main Pipeline ────────────────────────────────────────────────────────────────
+
+def run_inference_v2(image_path: str, instance_id: int) -> dict:
     """
-    End-to-end inference for a single uploaded image.
+    Full hybrid inference pipeline for one uploaded image.
 
     Args:
-        image_path  : absolute path to the saved image file
-        instance_id : DetectionResult primary key (used for heatmap filename)
+        image_path  : absolute path to saved upload
+        instance_id : DetectionResult primary key (for heatmap filename)
 
-    Returns:
-        dict with keys:
-          is_fake, confidence_score, final_label, decision_score,
-          kmeans_variance, edge_score, entropy_score,
-          heatmap_path
+    Returns dict with all scores and metadata needed by the view.
+    Keys:
+      is_fake, confidence, verdict, decision_score,
+      freq_score, lbp_score, color_score,
+      kmeans_variance, edge_score, entropy_score,
+      heatmap_path, face_meta, processing_time, _api_dict
     """
-    # ── 1. load model ──────────────────────────────────────────────────────────
+    t_start = time.time()
+
+    # ── 1. Improved face detection ──────────────────────────────────────────────
+    face_bgr, face_meta = detect_and_crop_face(
+        image_path,
+        min_sharpness=20.0,
+        min_face_ratio=0.03,
+        pad_ratio=0.15,
+    )
+
+    face_rgb = _face_to_rgb(face_bgr)
+    face_224 = _resize_for_analysis(face_rgb, size=224)
+
+    # ── 2. Face landmarks & symmetry (bonus meta) ───────────────────────────────
+    gray_face = cv2.cvtColor(face_bgr, cv2.COLOR_BGR2GRAY)
+    gray_224  = cv2.resize(gray_face, (224, 224))
+    landmark_meta = get_face_landmarks_simple(gray_224)
+    face_meta.update(landmark_meta)
+
+    # ── 3. DL preprocessing → tensor ───────────────────────────────────────────
     model = load_model()
 
-    # ── 2. preprocess: face crop + resize + normalise ──────────────────────────
-    # returns: (1, C, H, W) tensor  +  (H, W, 3) uint8 RGB numpy array
-    tensor, face_rgb = preprocess(image_path)
+    # Try to use the improved preprocess_from_bgr if available,
+    # fall back to path-based preprocess
+    try:
+        tensor = preprocess_from_bgr(face_bgr)
+    except (AttributeError, Exception):
+        tensor, _ = preprocess(image_path)
 
-    # ── 3. deep learning prediction ────────────────────────────────────────────
+    # ── 4. ResNet18 forward pass ────────────────────────────────────────────────
     with torch.no_grad():
-        output = model(tensor)                              # (1, 2) logits
-        probs  = torch.softmax(output, dim=1)[0]          # (2,)
+        output = model(tensor)
+        probs  = torch.softmax(output, dim=1)[0]
 
-    # label convention assumed in training: 0 = real, 1 = fake
-    p_real      = float(probs[0].item())
-    p_fake      = float(probs[1].item())
-    dl_is_fake  = p_fake >= p_real
-    dl_conf     = p_fake if dl_is_fake else p_real        # confidence in own prediction
-    pred_class  = 1 if dl_is_fake else 0
+    # Label convention: 0 = real, 1 = fake
+    p_real     = float(probs[0].item())
+    p_fake_dl  = float(probs[1].item())
+    dl_is_fake = p_fake_dl >= p_real
+    dl_conf    = p_fake_dl if dl_is_fake else p_real
+    pred_class = 1 if dl_is_fake else 0
 
-    # ── 4. classical algorithms (all implemented from scratch) ─────────────────
-    # resize face to a standard 224×224 for consistent classical analysis
-    face_224 = cv2.resize(face_rgb, (224, 224), interpolation=cv2.INTER_AREA)
+    # ── 5. Classical algorithms (all on the face crop) ──────────────────────────
 
-    km_var    = kmeans_variance(image=face_224, k=8, max_iters=30, sample_size=3000)
-    edge_sc   = sobel_edge_score(image=face_224, downsample_to=128)
-    entropy_sc = image_entropy_score(image=face_224)
+    # 5a. K-Means pixel diversity
+    try:
+        km_var = kmeans_variance(image=face_224, k=8, max_iters=30, sample_size=3000)
+    except Exception as e:
+        print(f"[Inference] K-Means failed: {e}")
+        km_var = 0.5
 
-    # ── 5. Grad-CAM heatmap ────────────────────────────────────────────────────
+    # 5b. Sobel edge detection
+    try:
+        edge_sc = sobel_edge_score(image=face_224, downsample_to=128)
+    except Exception as e:
+        print(f"[Inference] Sobel failed: {e}")
+        edge_sc = 0.5
+
+    # 5c. Shannon entropy
+    try:
+        entr_sc = image_entropy_score(image=face_224)
+    except Exception as e:
+        print(f"[Inference] Entropy failed: {e}")
+        entr_sc = 0.5
+
+    # 5d. DCT Frequency Analysis (new)
+    try:
+        freq_result = frequency_analysis_score(image=face_224)
+        freq_sc     = freq_result["overall_score"]
+    except Exception as e:
+        print(f"[Inference] Frequency analysis failed: {e}")
+        freq_result = {"overall_score": 0.5, "hf_ratio": 0.5,
+                       "grid_artifact": 0.0, "spectral_slope": -2.0}
+        freq_sc = 0.5
+
+    # 5e. LBP Texture Analysis (new)
+    try:
+        lbp_result   = lbp_texture_score(image=face_bgr, P=8, R=1.0)
+        lbp_realness = lbp_result["overall_score"]
+    except Exception as e:
+        print(f"[Inference] LBP failed: {e}")
+        lbp_result   = {"overall_score": 0.5, "entropy": 3.0,
+                        "uniformity_ratio": 0.5, "texture_variance": 100.0}
+        lbp_realness = 0.5
+
+    # 5f. Color Statistics (new)
+    try:
+        color_result   = color_stats_score(image=face_bgr)
+        color_realness = color_result["overall_score"]
+    except Exception as e:
+        print(f"[Inference] Color stats failed: {e}")
+        color_result   = {"overall_score": 0.5}
+        color_realness = 0.5
+
+    # ── 6. Grad-CAM Heatmap ─────────────────────────────────────────────────────
     heatmap_rel = None
     try:
         heatmap_filename = f"heatmap_{instance_id}.jpg"
@@ -90,32 +192,46 @@ def run_inference(image_path: str, instance_id: int) -> dict:
     except Exception as exc:
         print(f"[Inference] Grad-CAM failed (non-fatal): {exc}")
 
-    # ── 6. hybrid decision engine ──────────────────────────────────────────────
-    result = compute_decision(
+    # ── 7. Hybrid Decision Engine v2 ────────────────────────────────────────────
+    result = compute_decision_v2(
         dl_is_fake      = dl_is_fake,
         dl_confidence   = dl_conf,
+        freq_score      = freq_sc,
+        lbp_realness    = lbp_realness,
+        color_realness  = color_realness,
         kmeans_variance = km_var,
         edge_score      = edge_sc,
-        entropy_score   = entropy_sc,
+        entropy_score   = entr_sc,
+        face_meta       = face_meta,
     )
 
+    processing_time = round(time.time() - t_start, 3)
+
+    # ── Build response dict ─────────────────────────────────────────────────────
+    api_dict = result.to_api_dict()
+    api_dict["processing_time"] = processing_time
+
+    # Attach detailed sub-scores for frontend charts
+    api_dict["detailed_analysis"] = {
+        "frequency": freq_result,
+        "lbp":       lbp_result,
+        "color":     color_result,
+        "face_meta": face_meta,
+    }
+
     return {
-        # DL output
-        "is_fake":          result.dl_is_fake,
-        "confidence_score": result.dl_confidence,   # store DL confidence in existing field
-
-        # hybrid output
-        "final_label":    result.final_label,
-        "decision_score": result.decision_score,
-
-        # classical algorithm scores
-        "kmeans_variance": result.kmeans_variance,
-        "edge_score":      result.edge_score,
-        "entropy_score":   result.entropy_score,
-
-        # files
-        "heatmap_path": heatmap_rel,
-
-        # full API dict for the response body
-        "_api_dict": result.to_api_dict(),
+        # Scalar fields for DB storage
+        "is_fake":          result.verdict == "FAKE",
+        "confidence_score": result.dl_confidence,    # DL confidence for DB field
+        "verdict":          result.verdict,
+        "decision_score":   result.decision_score,
+        "freq_score":       freq_sc,
+        "lbp_score":        lbp_realness,
+        "color_score":      color_realness,
+        "kmeans_variance":  km_var,
+        "edge_score":       edge_sc,
+        "entropy_score":    entr_sc,
+        "heatmap_path":     heatmap_rel,
+        "processing_time":  processing_time,
+        "_api_dict":        api_dict,
     }
